@@ -42,14 +42,20 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun MyApp(viewModel: LocationViewModel){
+fun MyApp(viewModel: LocationViewModel) {
     val context = LocalContext.current
     val locationUtils = LocationUtils(context)
-    LocationDisplay(context = context, viewModel = viewModel , locationUtils = locationUtils)
+    LocationDisplay(context = context, viewModel = viewModel, locationUtils = locationUtils)
 }
 
 @Composable
-fun LocationDisplay(context: Context,viewModel:LocationViewModel, locationUtils: LocationUtils) {
+fun LocationDisplay(
+    context: Context,
+    viewModel: LocationViewModel,
+    locationUtils: LocationUtils
+) {
+
+    val location = viewModel.location.value
     val requestPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions(),
         onResult = { permissions ->
@@ -57,6 +63,7 @@ fun LocationDisplay(context: Context,viewModel:LocationViewModel, locationUtils:
                 && permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
             ) {
                 //Have location access
+                locationUtils.requestLocationUpdates(viewModel)
             } else {
                 // ASK FOR ACCESS
                 val rationalRequired = ActivityCompat.shouldShowRequestPermissionRationale(
@@ -72,9 +79,10 @@ fun LocationDisplay(context: Context,viewModel:LocationViewModel, locationUtils:
                         Toast.LENGTH_LONG
                     )
                         .show()
-                }else{
+                } else {
                     Toast.makeText(
-                        context, "Location access is required for this feature to work! Please enable it in mobile settings",
+                        context,
+                        "Location access is required for this feature to work! Please enable it in mobile settings",
                         Toast.LENGTH_LONG
                     )
                         .show()
@@ -90,10 +98,18 @@ fun LocationDisplay(context: Context,viewModel:LocationViewModel, locationUtils:
     ) {
 
         Text(text = "Location Not Available!")
+        if (location!=null){
+            Text(text = "Address: ${location.latitude}, ${location.longitude}")
+
+        }else{
+            Text(text = "Location not available!")
+
+        }
 
         Button(onClick = {
             if (locationUtils.hasLocationPermission(context)) {
-                //Display location
+                //Update location
+                locationUtils.requestLocationUpdates(viewModel)
             } else {
                 // Ask for permission
                 requestPermissionLauncher.launch(
